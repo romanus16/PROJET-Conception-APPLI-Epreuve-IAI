@@ -1,16 +1,32 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import (FiliereViewSet, MatiereViewSet, RessourcesViewSet,
-                    UtilisateurViewSet, EtudiantViewSet, DocumentStageViewSet)
-
-router = DefaultRouter()
-router.register(r'filieres', FiliereViewSet)
-router.register(r'matieres', MatiereViewSet)
-router.register(r'ressources', RessourcesViewSet)
-router.register(r'utilisateurs', UtilisateurViewSet)
-router.register(r'etudiants', EtudiantViewSet)
-router.register(r'documents', DocumentStageViewSet)
+# api/urls.py
+from django.urls import path
+from . import views
 
 urlpatterns = [
-    path('api/', include(router.urls)),
+    # Authentification
+    path('auth/register/', views.register, name='register'),
+    path('auth/login/', views.login, name='login'),
+    path('auth/me/', views.me, name='me'),
+    
+    # Filières
+    path('filieres/', views.get_filieres, name='filieres'),
+    path('filieres/create/', views.create_filiere, name='create_filiere'),
+    
+    # Matières
+    path('matieres/', views.get_matieres, name='matieres'),
+    path('matieres/create/', views.create_matiere, name='create_matiere'),
+    
+    # Ressources avec validation
+    path('ressources/', views.get_ressources, name='ressources'),
+    path('ressources/en-attente/', views.get_ressources_en_attente, name='ressources_en_attente'),
+    path('ressources/mes-ressources/', views.get_mes_ressources, name='mes_ressources'),
+    path('ressources/<int:pk>/valider/', views.valider_ressource, name='valider_ressource'),
+    path('upload/ressource/', views.upload_ressource, name='upload_ressource'),
+    
+    # Documents de stage
+    path('documents/', views.get_documents_stage, name='documents'),
+    path('upload/document/', views.upload_document_stage, name='upload_document'),
+    
+    # Statistiques
+    path('stats/', views.get_stats, name='stats'),
 ]

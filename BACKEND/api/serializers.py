@@ -3,9 +3,8 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from .models import Utilisateur, Filiere, Etudiant, Matiere, Ressources, DocumentStage
 
+
 class UtilisateurSerializer(serializers.ModelSerializer):
-    """Convertit Utilisateur en JSON"""
-    
     nom_complet = serializers.SerializerMethodField()
     
     class Meta:
@@ -18,38 +17,47 @@ class UtilisateurSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """Pour l'inscription d'un nouvel étudiant"""
-    
-    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
-    password_confirm = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    password = serializers.CharField(write_only=True)
+    password_confirm = serializers.CharField(write_only=True)
+    # Champs optionnels pour créer le profil étudiant simultanément
+    matricule = serializers.CharField(required=False, write_only=True)
+    niveau = serializers.ChoiceField(choices=Etudiant.NIVEAU_CHOICES, required=False, write_only=True)
+    filiere = serializers.PrimaryKeyRelatedField(queryset=Filiere.objects.all(), required=False, write_only=True)
     
     class Meta:
         model = Utilisateur
-        fields = ['nom', 'prenom', 'email', 'password', 'password_confirm']
+        fields = ['nom', 'prenom', 'email', 'password', 'password_confirm', 'matricule', 'niveau', 'filiere']
     
     def validate(self, data):
-        """Vérifie que les mots de passe correspondent"""
         if data['password'] != data['password_confirm']:
             raise serializers.ValidationError("Les mots de passe ne correspondent pas")
+        if 'matricule' in data and Etudiant.objects.filter(matricule=data['matricule']).exists():
+            raise serializers.ValidationError({"matricule": "Ce matricule est déjà utilisé."})
         return data
     
     def create(self, validated_data):
-        """Crée l'utilisateur avec le rôle 'etudiant'"""
         validated_data.pop('password_confirm')
-        validated_data['role'] = 'etudiant'
-        validated_data['password'] = make_password(validated_data.pop('password'))
-        return Utilisateur.objects.create(**validated_data)
+        # Extraction des données étudiant
+        matricule = validated_data.pop('matricule', None)
+        niveau = validated_data.pop('niveau', None)
+        filiere = validated_data.pop('filiere', None)
+        
+        # Création de l'utilisateur via le manager pour le hachage du mot de passe
+        user = Utilisateur.objects.create_user(**validated_data, role='etudiant')
+        
+        # Création automatique du profil étudiant si les infos sont présentes
+        if matricule and niveau:
+            Etudiant.objects.create(utilisateur=user, matricule=matricule, niveau=niveau, filiere=filiere)
+            
+        return user
 
 
 class LoginSerializer(serializers.Serializer):
-    """Pour la connexion"""
     email = serializers.EmailField()
     password = serializers.CharField()
 
 
 class FiliereSerializer(serializers.ModelSerializer):
-    """Convertit Filiere en JSON"""
-    
     nombre_etudiants = serializers.IntegerField(read_only=True)
     nombre_matieres = serializers.IntegerField(read_only=True)
     
@@ -59,74 +67,83 @@ class FiliereSerializer(serializers.ModelSerializer):
 
 
 class EtudiantSerializer(serializers.ModelSerializer):
-    """Convertit Etudiant en JSON avec les infos utilisateur"""
-    
     nom = serializers.ReadOnlyField(source='utilisateur.nom')
     prenom = serializers.ReadOnlyField(source='utilisateur.prenom')
     email = serializers.ReadOnlyField(source='utilisateur.email')
-    nom_complet = serializers.SerializerMethodField()
     filiere_nom = serializers.ReadOnlyField(source='filiere.libelle_fil')
+    nom_complet = serializers.SerializerMethodField()
     
     class Meta:
         model = Etudiant
-        fields = ['matricule', 'niveau', 'filiere', 'filiere_nom', 
-                  'utilisateur', 'nom', 'prenom', 'email', 'nom_complet']
+        fields = ['id', 'matricule', 'niveau', 'filiere', 'filiere_nom', 
+                  'utilisateur', 'nom', 'prenom', 'email', 'nom_complet',
+                  'annee_inscription', 'telephone', 'adresse']
         depth = 1
     
     def get_nom_complet(self, obj):
-        return f"{obj.prenom} {obj.nom}"
+        return f"{obj.utilisateur.prenom} {obj.utilisateur.nom}"
+
 
 class MatiereSerializer(serializers.ModelSerializer):
-    """Convertit Matiere en JSON"""
-    
     filiere_nom = serializers.ReadOnlyField(source='filiere.libelle_fil')
     nombre_ressources = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Matiere
-        fields = ['id', 'nom_matiere', 'coef_ue', 'filiere', 'filiere_nom', 'nombre_ressources']
+        fields = ['id', 'nom_matiere', 'coef_ue', 'niveau', 'filiere', 'filiere_nom', 
+                  'credits', 'semestre', 'description', 'nombre_ressources']
+
 
 class RessourcesSerializer(serializers.ModelSerializer):
-    """Convertit Ressources en JSON"""
-    
     type_display = serializers.ReadOnlyField(source='get_type_ressources_display')
+    statut_display = serializers.ReadOnlyField(source='get_statut_display')
     matiere_nom = serializers.ReadOnlyField(source='matiere.nom_matiere')
-    utilisateur_nom = serializers.SerializerMethodField()
+    auteur_nom = serializers.SerializerMethodField()
+    auteur_id = serializers.ReadOnlyField(source='utilisateur.id')
     
     class Meta:
         model = Ressources
         fields = ['id', 'titres_ressources', 'type_ressources', 'type_display',
-                  'url', 'utilisateur', 'utilisateur_nom', 'matiere', 'matiere_nom']
+                  'url', 'description', 'matiere', 'matiere_nom', 
+                  'statut', 'statut_display', 'commentaire_refus',
+                  'auteur_nom', 'auteur_id', 'date_soumission',
+                  'date_validation', 'nombre_telechargements']
+        read_only_fields = ['id', 'statut', 'commentaire_refus', 'date_validation', 
+                           'date_soumission', 'nombre_telechargements']
     
-    def get_utilisateur_nom(self, obj):
+    def get_auteur_nom(self, obj):
         return f"{obj.utilisateur.prenom} {obj.utilisateur.nom}"
 
 
 class RessourcesUploadSerializer(serializers.ModelSerializer):
-    """Pour l'upload d'un ZIP"""
-    
     class Meta:
         model = Ressources
-        fields = ['titres_ressources', 'type_ressources', 'url', 'matiere']
+        fields = ['id', 'titres_ressources', 'type_ressources', 'url', 'matiere', 'description']
+
+
+class RessourcesValidationSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=[('valider', 'Valider'), ('refuser', 'Refuser')])
+    commentaire = serializers.CharField(required=False, allow_blank=True)
+
 
 class DocumentStageSerializer(serializers.ModelSerializer):
-    """Convertit DocumentStage en JSON"""
-    
+    type_display = serializers.ReadOnlyField(source='get_type_document_display')
     etudiant_nom = serializers.SerializerMethodField()
     etudiant_matricule = serializers.ReadOnlyField(source='etudiant.matricule')
     
     class Meta:
         model = DocumentStage
-        fields = ['id', 'titre', 'url_document', 'est_modele_officiel', 
-                  'etudiant', 'etudiant_nom', 'etudiant_matricule']
+        fields = ['id', 'titre', 'type_document', 'type_display', 'url_document',
+                  'est_modele_officiel', 'etudiant', 'etudiant_nom', 
+                  'etudiant_matricule', 'est_valide', 'commentaire_admin',
+                  'date_validation', 'created_at', 'updated_at']
+        read_only_fields = ['est_valide', 'commentaire_admin', 'date_validation', 'created_at']
     
     def get_etudiant_nom(self, obj):
-        return f"{obj.etudiant.prenom} {obj.etudiant.nom}"
+        return f"{obj.etudiant.utilisateur.prenom} {obj.etudiant.utilisateur.nom}"
 
 
 class DocumentStageUploadSerializer(serializers.ModelSerializer):
-    """Pour l'upload d'un document de stage"""
-    
     class Meta:
         model = DocumentStage
-        fields = ['titre', 'url_document', 'est_modele_officiel', 'etudiant']
+        fields = ['id', 'titre', 'type_document', 'url_document', 'est_modele_officiel', 'etudiant']
