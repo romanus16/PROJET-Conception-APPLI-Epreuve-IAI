@@ -346,3 +346,9 @@ def get_stats(request):
         ).count()
     
     return Response({'success': True, 'data': stats})
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_etudiants(request):
+    etudiants = Etudiant.objects.select_related('utilisateur', 'filiere').all()
+    return Response({'success': True, 'data': EtudiantSerializer(etudiants, many=True).data})
