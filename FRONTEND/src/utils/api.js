@@ -1,9 +1,8 @@
 import axios from 'axios'
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -24,7 +23,7 @@ api.interceptors.response.use(
       const refresh = localStorage.getItem('refresh_token')
       if (refresh) {
         try {
-          const { data } = await axios.post(`${BASE_URL}/auth/token/refresh/`, { refresh })
+          const { data } = await axios.post('/api/auth/token/refresh/', { refresh })
           localStorage.setItem('access_token', data.access)
           original.headers.Authorization = `Bearer ${data.access}`
           return api(original)
@@ -61,17 +60,21 @@ export const matieresAPI = {
 
 // Ressources
 export const ressourcesAPI = {
-  list:         params => api.get('/ressources/', { params }),
-  enAttente:    ()     => api.get('/ressources/en-attente/'),
-  mesRessources:()     => api.get('/ressources/mes-ressources/'),
-  upload:       d      => api.post('/upload/ressource/', d, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  valider:      (pk,d) => api.post(`/ressources/${pk}/valider/`, d),
+  list:          params => api.get('/ressources/', { params }),
+  enAttente:     ()     => api.get('/ressources/en-attente/'),
+  mesRessources: ()     => api.get('/ressources/mes-ressources/'),
+  upload:        d      => api.post('/upload/ressource/', d, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  valider: (pk, d) => api.post(`/ressources/${pk}/valider/`, d),
 }
 
 // Documents stage
 export const documentsAPI = {
   list:   () => api.get('/documents/'),
-  upload: d  => api.post('/upload/document/', d, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  upload: d  => api.post('/upload/document/', d, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 }
 
 // Stats

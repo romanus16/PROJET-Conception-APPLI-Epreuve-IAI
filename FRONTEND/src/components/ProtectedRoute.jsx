@@ -4,7 +4,16 @@ import { useAuth } from '../context/AuthContext'
 import { Spinner } from './UI'
 
 export function ProtectedRoute({ children, adminOnly = false }) {
-  const { user, loading } = useAuth()
+  const auth = useAuth()
+
+  // Contexte pas encore monté (ne devrait pas arriver avec AppRoutes mais sécurité)
+  if (!auth) return (
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <Spinner size={36} color="var(--navy)" />
+    </div>
+  )
+
+  const { user, loading } = auth
 
   if (loading) return (
     <div style={{
@@ -27,13 +36,22 @@ export function ProtectedRoute({ children, adminOnly = false }) {
 }
 
 export function PublicRoute({ children }) {
-  const { user, loading } = useAuth()
+  const auth = useAuth()
+
+  if (!auth) return (
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <Spinner size={36} color="var(--navy)" />
+    </div>
+  )
+
+  const { user, loading } = auth
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Spinner size={36} color="var(--navy)" />
     </div>
   )
+
   if (user) return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />
   return children
 }

@@ -22,39 +22,47 @@ import AdminValidation from './pages/AdminValidation'
 import AdminRessources from './pages/AdminRessources'
 import AdminEtudiants  from './pages/AdminEtudiants'
 
+// AuthProvider doit être DANS BrowserRouter (pour useNavigate)
+// mais AUTOUR de tout le reste (pour useAuth)
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          {/* ── Public ── */}
-          <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
-          <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-
-          {/* ── Student protected ── */}
-          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard"      element={<Dashboard />} />
-            <Route path="cours"          element={<Cours />} />
-            <Route path="stages"         element={<Stages />} />
-            <Route path="upload"         element={<Upload />} />
-            <Route path="mes-ressources" element={<MesRessources />} />
-            <Route path="profile"        element={<Profile />} />
-          </Route>
-
-          {/* ── Admin protected ── */}
-          <Route path="/admin" element={<ProtectedRoute adminOnly><Layout /></ProtectedRoute>}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="validation" element={<AdminValidation />} />
-            <Route path="ressources" element={<AdminRessources />} />
-            <Route path="etudiants"  element={<AdminEtudiants />} />
-            <Route path="profile"    element={<Profile />} />
-          </Route>
-
-          {/* ── 404 ── */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <AppRoutes />
       </AuthProvider>
     </BrowserRouter>
+  )
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* ── Public ── */}
+      <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+
+      {/* ── Student ── */}
+      <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard"      element={<Dashboard />} />
+        <Route path="cours"          element={<Cours />} />
+        <Route path="stages"         element={<Stages />} />
+        <Route path="upload"         element={<Upload />} />
+        <Route path="mes-ressources" element={<MesRessources />} />
+        <Route path="profile"        element={<Profile />} />
+      </Route>
+
+      {/* ── Admin ── */}
+      <Route path="/admin" element={<ProtectedRoute adminOnly><Layout /></ProtectedRoute>}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="validation" element={<AdminValidation />} />
+        <Route path="ressources" element={<AdminRessources />} />
+        <Route path="etudiants"  element={<AdminEtudiants />} />
+        <Route path="profile"    element={<Profile />} />
+      </Route>
+
+      {/* ── 404 ── */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   )
 }
