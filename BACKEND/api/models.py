@@ -1,7 +1,7 @@
 # api/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from cloudinary.models import CloudinaryField
+
 from django.utils import timezone
 
 
@@ -158,7 +158,7 @@ class Ressources(models.Model):
     # Informations de base
     titres_ressources = models.CharField(max_length=255, verbose_name="Titre")
     type_ressources = models.CharField(max_length=50, choices=TYPE_CHOICES)
-    url = CloudinaryField(resource_type='raw', verbose_name="Fichier ZIP")
+    url = models.FileField(upload_to='ressources/', verbose_name="Fichier ZIP")
     description = models.TextField(blank=True, null=True, verbose_name="Description")
     
     # Validation

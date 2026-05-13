@@ -9,8 +9,9 @@ urlpatterns = [
     path('auth/register/', views.register, name='register'),
     path('auth/login/', views.login, name='login'),
     path('auth/me/', views.me, name='me'),
-    path('api/auth/token/refresh/', TokenRefreshView.as_view()),
-    path('api/etudiants/', views.get_etudiants, name='etudiants'),
+    path('auth/token/refresh/', TokenRefreshView.as_view()),
+    path('etudiants/', views.get_etudiants, name='etudiants'),
+    path('auth/change-password/', views.change_password, name='change_password'),
     
     # Filières
     path('filieres/', views.get_filieres, name='filieres'),

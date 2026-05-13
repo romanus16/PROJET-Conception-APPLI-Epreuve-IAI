@@ -57,7 +57,7 @@ export default function Profile() {
                 {user?.role==='admin' ? '👑 Administrateur' : '🎓 Étudiant'}
               </Badge>
               {et?.niveau  && <Badge color="blue">{NIVEAU_LABELS[et.niveau]||et.niveau}</Badge>}
-              {et?.filiere && <Badge color="green">{et.filiere.libelle_fil}</Badge>}
+              {et?.filiere_nom && <Badge color="green">{et.filiere_nom}</Badge>}
             </div>
           </div>
         </div>

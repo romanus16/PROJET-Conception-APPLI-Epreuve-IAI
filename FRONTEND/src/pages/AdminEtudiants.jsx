@@ -44,7 +44,7 @@ export default function AdminEtudiants() {
     try {
       await api.post('/auth/register/', {
         nom: form.nom, prenom: form.prenom, email: form.email,
-        password: form.password, password2: form.password, role: 'etudiant',
+        password: form.password, password_confirm: form.password, role: 'etudiant',
         etudiant: { matricule: form.matricule, niveau: form.niveau, telephone: form.telephone },
       })
       toast('Étudiant créé avec succès !', 'success')

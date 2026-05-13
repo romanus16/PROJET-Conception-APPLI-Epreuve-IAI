@@ -20,6 +20,7 @@ from .serializers import (
     DocumentStageUploadSerializer,
     DocumentStageSerializer,
     EtudiantSerializer,
+    ChangePasswordSerializer,
 )
 from .permissions import IsAdminUser, CanViewRessource
 
@@ -352,3 +353,22 @@ def get_stats(request):
 def get_etudiants(request):
     etudiants = Etudiant.objects.select_related('utilisateur', 'filiere').all()
     return Response({'success': True, 'data': EtudiantSerializer(etudiants, many=True).data})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    serializer = ChangePasswordSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response({'success': False, 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = request.user
+    if not user.check_password(serializer.validated_data['old_password']):
+        return Response({
+            'success': False,
+            'message': 'Mot de passe actuel incorrect'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    user.set_password(serializer.validated_data['new_password'])
+    user.save()
+    return Response({'success': True, 'message': 'Mot de passe modifié avec succès'})

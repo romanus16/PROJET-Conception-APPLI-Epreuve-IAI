@@ -1,11 +1,9 @@
 # Generated manually to match models.py
 
-import cloudinary.models
 import django.db.models.deletion
 import django.utils.timezone
 from django.conf import settings
 from django.db import migrations, models
-import api.models
 
 
 class Migration(migrations.Migration):
@@ -120,7 +118,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('titres_ressources', models.CharField(max_length=255, verbose_name='Titre')),
                 ('type_ressources', models.CharField(choices=[('cours', '📚 Cours'), ('td', '✏️ Travaux Dirigés'), ('tp', '💻 Travaux Pratiques'), ('examen', '📝 Examen'), ('autre', '📎 Autre')], max_length=50)),
-                ('url', cloudinary.models.CloudinaryField(max_length=255, verbose_name='Fichier ZIP', resource_type='raw')),
+                ('url', models.FileField(upload_to='ressources/', verbose_name='Fichier ZIP')),
                 ('description', models.TextField(blank=True, null=True, verbose_name='Description')),
                 ('statut', models.CharField(choices=[('en_attente', '⏳ En attente de validation'), ('valide', '✅ Validé'), ('refuse', '❌ Refusé')], default='en_attente', max_length=20)),
                 ('commentaire_refus', models.TextField(blank=True, null=True, verbose_name='Motif du refus')),

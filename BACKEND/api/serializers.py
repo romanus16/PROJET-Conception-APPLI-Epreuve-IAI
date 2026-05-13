@@ -183,3 +183,8 @@ class DocumentStageUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model  = DocumentStage
         fields = ['id', 'titre', 'type_document', 'url_document', 'est_modele_officiel', 'etudiant']
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, min_length=6)
