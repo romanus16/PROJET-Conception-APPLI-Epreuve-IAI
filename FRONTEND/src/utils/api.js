@@ -50,12 +50,16 @@ export const authAPI = {
 export const filieresAPI = {
   list:   () => api.get('/filieres/'),
   create: d  => api.post('/filieres/create/', d),
+  update: (id, d) => api.put(`/filieres/${id}/update/`, d),
+  delete: id     => api.delete(`/filieres/${id}/delete/`),
 }
 
 // Matières
 export const matieresAPI = {
   list:   params => api.get('/matieres/', { params }),
   create: d      => api.post('/matieres/create/', d),
+  update: (id, d) => api.put(`/matieres/${id}/update/`, d),
+  delete: id     => api.delete(`/matieres/${id}/delete/`),
 }
 
 // Ressources
@@ -67,6 +71,7 @@ export const ressourcesAPI = {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   valider: (pk, d) => api.post(`/ressources/${pk}/valider/`, d),
+  preview: (pk) => api.get(`/ressources/${pk}/preview/`),
 }
 
 // Documents stage
@@ -80,4 +85,14 @@ export const documentsAPI = {
 // Stats
 export const statsAPI = {
   get: () => api.get('/stats/'),
+}
+
+// Étudiants (admin only)
+export const etudiantsAPI = {
+  list: () => api.get('/etudiants/'),
+}
+
+// Assistant IA
+export const iaAPI = {
+  ask: (question, context = '') => api.post('/ia/ask/', { question, context }),
 }

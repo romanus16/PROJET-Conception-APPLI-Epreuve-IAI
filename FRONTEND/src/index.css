@@ -11,6 +11,8 @@
   --orange-dark: #c96010;
   --white: #ffffff;
   --off-white: #f4f6fb;
+  --bg-page: var(--off-white);
+  --bg-card: #ffffff;
   --gray-50: #f8fafc;
   --gray-100: #f1f5f9;
   --gray-200: #e2e8f0;

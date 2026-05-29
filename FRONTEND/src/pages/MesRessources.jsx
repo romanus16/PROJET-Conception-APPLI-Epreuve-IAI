@@ -67,7 +67,7 @@ export default function MesRessources() {
                         <Badge color={STATUT_COLOR[r.statut]}>{STATUT_LABEL[r.statut]}</Badge>
                       </div>
                       <p style={{ fontSize:'12px', color:'var(--gray-400)' }}>
-                        {r.matiere?.nom_matiere} · {new Date(r.date_soumission).toLocaleDateString('fr-FR')}
+                        {r.matiere?.nom_matiere} · {r.filiere_display || r.filiere} · {new Date(r.date_soumission).toLocaleDateString('fr-FR')}
                       </p>
                       {r.statut==='refuse' && r.commentaire_refus && (
                         <div style={{ marginTop:'6px', padding:'6px 10px', background:'var(--red-light)', borderRadius:'6px', fontSize:'12px', color:'var(--red)' }}>

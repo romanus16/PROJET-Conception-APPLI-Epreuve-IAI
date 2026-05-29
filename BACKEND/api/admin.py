@@ -19,7 +19,15 @@ admin.site.register(Utilisateur, UtilisateurAdmin)
 admin.site.register(Filiere)
 admin.site.register(Etudiant)
 admin.site.register(Matiere)
-admin.site.register(Ressources)
+
+@admin.register(Ressources)
+class RessourcesAdmin(admin.ModelAdmin):
+    list_display = ['titres_ressources', 'type_ressources', 'filiere', 'matiere', 'statut', 'utilisateur', 'date_soumission']
+    list_filter = ['type_ressources', 'filiere', 'statut', 'date_soumission']
+    search_fields = ['titres_ressources', 'description', 'utilisateur__nom', 'utilisateur__prenom']
+    readonly_fields = ['date_soumission', 'date_validation', 'valide_par', 'commentaire_refus', 'nombre_telechargements']
+    ordering = ['-date_soumission']
+
 admin.site.register(DocumentStage)
 
 # Customize admin title

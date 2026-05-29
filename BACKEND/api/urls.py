@@ -16,10 +16,14 @@ urlpatterns = [
     # Filières
     path('filieres/', views.get_filieres, name='filieres'),
     path('filieres/create/', views.create_filiere, name='create_filiere'),
+    path('filieres/<int:pk>/update/', views.update_filiere, name='update_filiere'),
+    path('filieres/<int:pk>/delete/', views.delete_filiere, name='delete_filiere'),
     
     # Matières
     path('matieres/', views.get_matieres, name='matieres'),
     path('matieres/create/', views.create_matiere, name='create_matiere'),
+    path('matieres/<int:pk>/update/', views.update_matiere, name='update_matiere'),
+    path('matieres/<int:pk>/delete/', views.delete_matiere, name='delete_matiere'),
     
     # Ressources avec validation
     path('ressources/', views.get_ressources, name='ressources'),
@@ -34,4 +38,10 @@ urlpatterns = [
     
     # Statistiques
     path('stats/', views.get_stats, name='stats'),
+    
+    # Prévisualisation des ressources
+    path('ressources/<int:pk>/preview/', views.get_ressource_preview, name='ressource_preview'),
+    
+    # Assistant IA
+    path('ia/ask/', views.ask_ai, name='ask_ai'),
 ]

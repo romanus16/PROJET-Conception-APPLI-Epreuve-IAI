@@ -125,6 +125,7 @@ class MatiereSerializer(serializers.ModelSerializer):
 class RessourcesSerializer(serializers.ModelSerializer):
     type_display   = serializers.ReadOnlyField(source='get_type_ressources_display')
     statut_display = serializers.ReadOnlyField(source='get_statut_display')
+    filiere_display = serializers.ReadOnlyField(source='get_filiere_display')
     matiere_nom    = serializers.ReadOnlyField(source='matiere.nom_matiere')
     auteur_nom     = serializers.SerializerMethodField()
     auteur_id      = serializers.ReadOnlyField(source='utilisateur.id')
@@ -135,7 +136,7 @@ class RessourcesSerializer(serializers.ModelSerializer):
         model  = Ressources
         fields = [
             'id', 'titres_ressources', 'type_ressources', 'type_display',
-            'url', 'description', 'matiere', 'matiere_nom',
+            'filiere', 'filiere_display', 'url', 'description', 'matiere', 'matiere_nom',
             'statut', 'statut_display', 'commentaire_refus',
             'auteur_nom', 'auteur_id', 'utilisateur',
             'date_soumission', 'date_validation', 'nombre_telechargements',
@@ -152,7 +153,7 @@ class RessourcesSerializer(serializers.ModelSerializer):
 class RessourcesUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Ressources
-        fields = ['id', 'titres_ressources', 'type_ressources', 'url', 'matiere', 'description']
+        fields = ['id', 'titres_ressources', 'type_ressources', 'filiere', 'url', 'matiere', 'description']
 
 
 class RessourcesValidationSerializer(serializers.Serializer):
@@ -180,9 +181,12 @@ class DocumentStageSerializer(serializers.ModelSerializer):
 
 
 class DocumentStageUploadSerializer(serializers.ModelSerializer):
+    est_modele_officiel = serializers.BooleanField(required=False, default=False)
+    
     class Meta:
         model  = DocumentStage
         fields = ['id', 'titre', 'type_document', 'url_document', 'est_modele_officiel', 'etudiant']
+        read_only_fields = ['id', 'etudiant']
 
 
 class ChangePasswordSerializer(serializers.Serializer):

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { filieresAPI, matieresAPI, ressourcesAPI } from '../utils/api'
-import { Card, Badge, Spinner, EmptyState } from '../components/UI'
+import { Card, Badge, Spinner, EmptyState, DocumentViewer } from '../components/UI'
 
 const TYPE_ICONS   = { cours:'📚', td:'✏️', tp:'💻', examen:'📝', autre:'📎' }
 const TYPE_LABELS  = { cours:'Cours', td:'TD', tp:'TP', examen:'Examen', autre:'Autre' }
@@ -16,6 +16,11 @@ export default function Cours() {
   const [loading,   setLoading]   = useState(true)
   const [tab,   setTab]   = useState('all')
   const [search,setSearch]= useState('')
+  
+  // Document viewer state
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerData, setViewerData] = useState(null)
+  const [viewerLoading, setViewerLoading] = useState(false)
 
   const filiereId = sp.get('filiere') || ''
   const niveau    = sp.get('niveau')  || ''
@@ -58,6 +63,29 @@ export default function Cours() {
       fontSize:'12px', fontWeight:600,
     }}>{label}</button>
   )
+
+  // Open document viewer
+  const openViewer = async (ressource) => {
+    try {
+      setViewerLoading(true)
+      const response = await ressourcesAPI.preview(ressource.id)
+      if (response.data.success) {
+        setViewerData(response.data.data)
+        setViewerOpen(true)
+      }
+    } catch (error) {
+      console.error('Error loading preview:', error)
+      // Fallback: open direct download
+      window.open(typeof ressource.url === 'object' ? ressource.url.url : ressource.url, '_blank')
+    } finally {
+      setViewerLoading(false)
+    }
+  }
+
+  const closeViewer = () => {
+    setViewerOpen(false)
+    setViewerData(null)
+  }
 
   return (
     <div style={{ padding:'24px', maxWidth:1000, margin:'0 auto' }}>
@@ -125,19 +153,60 @@ export default function Cours() {
                     <p style={{ fontSize:'12px', color:'var(--gray-400)' }}>{r.matiere?.nom_matiere}</p>
                     {r.description && <p style={{ fontSize:'12px', color:'var(--gray-500)', marginTop:'8px', lineHeight:1.5 }}>{r.description.substring(0,80)}…</p>}
                   </div>
-                  <div style={{ borderTop:'1px solid var(--gray-100)', padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                  <div style={{ borderTop:'1px solid var(--gray-100)', padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'8px' }}>
                     <span style={{ fontSize:'12px', color:'var(--gray-400)' }}>📥 {r.nombre_telechargements||0}</span>
-                    {r.url && (
-                      <a href={typeof r.url==='object'?r.url.url:r.url} target="_blank" rel="noreferrer"
-                        style={{ background:'var(--navy)', color:'#fff', padding:'6px 14px', borderRadius:'8px', fontSize:'12px', fontWeight:700, textDecoration:'none' }}>
-                        Télécharger
-                      </a>
-                    )}
+                    <div style={{ display:'flex', gap:'6px' }}>
+                      {r.url && (
+                        <button onClick={() => openViewer(r)}
+                          style={{ background:'var(--gray-100)', color:'var(--navy)', padding:'6px 12px', borderRadius:'8px', fontSize:'12px', fontWeight:600, textDecoration:'none', border:'none', cursor:'pointer', transition:'all .15s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--gray-200)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'var(--gray-100)'}>
+                          👁️ Aperçu
+                        </button>
+                      )}
+                      {r.url && (
+                        <a href={typeof r.url==='object'?r.url.url:r.url} target="_blank" rel="noreferrer"
+                          style={{ background:'var(--navy)', color:'#fff', padding:'6px 14px', borderRadius:'8px', fontSize:'12px', fontWeight:700, textDecoration:'none' }}>
+                          Télécharger
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </Card>
               ))}
             </div>
       }
+
+      {/* Document Viewer Modal */}
+      {viewerOpen && viewerData && (
+        <DocumentViewer
+          url={viewerData.url}
+          filename={viewerData.filename}
+          fileExtension={viewerData.file_extension}
+          mimeType={viewerData.mime_type}
+          canPreview={viewerData.can_preview}
+          onClose={closeViewer}
+        />
+      )}
+
+      {/* Loading overlay for viewer */}
+      {viewerLoading && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15,37,87,.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1002,
+        }}>
+          <div style={{
+            background: '#fff', padding: '24px 32px', borderRadius: 'var(--radius-lg)',
+            display: 'flex', alignItems: 'center', gap: '12px', boxShadow: 'var(--shadow-lg)',
+          }}>
+            <Spinner />
+            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--navy)' }}>
+              Chargement du document...
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

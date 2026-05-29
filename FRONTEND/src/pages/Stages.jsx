@@ -33,19 +33,39 @@ export default function Stages() {
   const handleUpload = async e => {
     e.preventDefault()
     if (!form.file) return toast('Veuillez sélectionner un fichier', 'error')
+    if (!form.titre.trim()) return toast('Veuillez entrer un titre', 'error')
+    
     setSaving(true)
     try {
       const fd = new FormData()
-      fd.append('titre',         form.titre)
+      fd.append('titre', form.titre.trim())
       fd.append('type_document', form.type_document)
-      fd.append('url_document',  form.file)
-      fd.append('etudiant',      user?.etudiant?.id)
+      fd.append('url_document', form.file)
+      
       const res = await documentsAPI.upload(fd)
-      setDocs(d => [res.data.data, ...d])
-      setOpen(false)
-      toast('Document déposé avec succès !', 'success')
-    } catch { toast('Erreur lors de l\'upload', 'error') }
-    finally { setSaving(false) }
+      
+      if (res.data.success) {
+        setDocs(d => [res.data.data, ...d])
+        setOpen(false)
+        toast('Document déposé avec succès !', 'success')
+        setForm({ titre:'', type_document:'rapport', file:null })
+      } else {
+        const errorMsg = res.data.message || res.data.errors 
+          ? JSON.stringify(res.data.errors) 
+          : 'Erreur inconnue'
+        toast(`Erreur: ${errorMsg}`, 'error')
+      }
+    } catch (err) {
+      console.error('Upload error:', err)
+      const errorMsg = err.response?.data?.errors 
+        ? JSON.stringify(err.response.data.errors)
+        : err.response?.data?.message 
+        ? err.response.data.message
+        : 'Erreur lors de l\'upload. Vérifiez votre connexion.'
+      toast(errorMsg, 'error')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -116,7 +136,7 @@ export default function Stages() {
                         </p>
                       </div>
                       <Badge color={d.est_valide?'green':'yellow'}>{d.est_valide?'Validé':'En attente'}</Badge>
-                      <a href={d.url_document} target="_blank" rel="noreferrer"
+                      <a href={d.url_document?.startsWith('http') ? d.url_document : `http://127.0.0.1:8000${d.url_document}`} target="_blank" rel="noreferrer"
                         style={{ background:'var(--navy)', color:'#fff', padding:'6px 14px', borderRadius:'8px', fontSize:'12px', fontWeight:700, textDecoration:'none' }}>Voir</a>
                     </div>
                     {d.commentaire_admin && (

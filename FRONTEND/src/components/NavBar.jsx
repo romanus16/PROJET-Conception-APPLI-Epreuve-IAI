@@ -6,13 +6,17 @@ const NAV_STUDENT = [
   { path: '/dashboard',       label: 'Accueil',   icon: '🏠' },
   { path: '/cours',           label: 'Cours',     icon: '📚' },
   { path: '/stages',          label: 'Stages',    icon: '💼' },
+  { path: '/assistant-ia',    label: 'Assistant IA', icon: '🤖' },
   { path: '/profile',         label: 'Profil',    icon: '👤' },
 ]
 const NAV_ADMIN = [
   { path: '/admin',           label: 'Dashboard', icon: '📊' },
+  { path: '/admin/filieres',  label: 'Filières',  icon: '🏫' },
   { path: '/admin/ressources',label: 'Ressources',icon: '📚' },
+  { path: '/admin/matieres',  label: 'Matières',  icon: '📖' },
   { path: '/admin/etudiants', label: 'Étudiants', icon: '🎓' },
   { path: '/admin/validation',label: 'Validation',icon: '✅' },
+  { path: '/assistant-ia',    label: 'Assistant IA', icon: '🤖' },
 ]
 
 export default function Navbar() {

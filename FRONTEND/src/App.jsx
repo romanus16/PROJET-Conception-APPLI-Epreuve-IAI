@@ -21,6 +21,11 @@ import AdminDashboard  from './pages/AdminDashboard'
 import AdminValidation from './pages/AdminValidation'
 import AdminRessources from './pages/AdminRessources'
 import AdminEtudiants  from './pages/AdminEtudiants'
+import AdminMatieres   from './pages/AdminMatieres'
+import AdminFilieres   from './pages/AdminFilieres'
+
+// Assistant IA (accessible by all users)
+import AssistantIA from './pages/AssistantIA'
 
 // AuthProvider doit être DANS BrowserRouter (pour useNavigate)
 // mais AUTOUR de tout le reste (pour useAuth)
@@ -50,15 +55,19 @@ function AppRoutes() {
         <Route path="upload"         element={<Upload />} />
         <Route path="mes-ressources" element={<MesRessources />} />
         <Route path="profile"        element={<Profile />} />
+        <Route path="assistant-ia"   element={<AssistantIA />} />
       </Route>
 
       {/* ── Admin ── */}
       <Route path="/admin" element={<ProtectedRoute adminOnly><Layout /></ProtectedRoute>}>
         <Route index element={<AdminDashboard />} />
+        <Route path="filieres"    element={<AdminFilieres />} />
         <Route path="validation" element={<AdminValidation />} />
         <Route path="ressources" element={<AdminRessources />} />
         <Route path="etudiants"  element={<AdminEtudiants />} />
+        <Route path="matieres"   element={<AdminMatieres />} />
         <Route path="profile"    element={<Profile />} />
+        <Route path="assistant-ia" element={<AssistantIA />} />
       </Route>
 
       {/* ── 404 ── */}

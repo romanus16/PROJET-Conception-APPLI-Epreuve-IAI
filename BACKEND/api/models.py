@@ -155,9 +155,16 @@ class Ressources(models.Model):
         ('refuse', '❌ Refusé'),
     ]
     
+    FILIERE_CHOICES = [
+        ('L1', 'Licence 1'),
+        ('L2', 'Licence 2'),
+        ('L3', 'Licence 3'),
+    ]
+    
     # Informations de base
     titres_ressources = models.CharField(max_length=255, verbose_name="Titre")
     type_ressources = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    filiere = models.CharField(max_length=10, choices=FILIERE_CHOICES, default='L1', verbose_name="Filière")
     url = models.FileField(upload_to='ressources/', verbose_name="Fichier ZIP")
     description = models.TextField(blank=True, null=True, verbose_name="Description")
     
@@ -301,6 +308,50 @@ L'équipe pédagogique
         except Exception as e:
             print(f"Erreur envoi email: {e}")
 
+    def _envoyer_notification_upload_admin(self):
+        """Envoyer un email aux administrateurs pour les informer d'un nouvel upload"""
+        from django.core.mail import send_mail
+        from django.conf import settings
+        from .models import Utilisateur
+        
+        # Récupérer tous les administrateurs
+        admins = Utilisateur.objects.filter(role='admin', is_active=True)
+        if not admins:
+            return
+        
+        admin_emails = [admin.email for admin in admins]
+        
+        sujet = f"📥 Nouvelle ressource soumise - {self.titres_ressources}"
+        message = f"""
+Bonjour,
+
+Une nouvelle ressource a été soumise par un étudiant et attend votre validation.
+
+📚 Détails de la ressource :
+- Titre : {self.titres_ressources}
+- Auteur : {self.utilisateur.prenom} {self.utilisateur.nom} ({self.utilisateur.email})
+- Matière : {self.matiere.nom_matiere}
+- Type : {self.get_type_ressources_display()}
+- Date de soumission : {self.date_soumission.strftime('%d/%m/%Y à %H:%M')}
+- Statut : En attente de validation
+
+🔗 Pour valider ou refuser cette ressource, connectez-vous au tableau de bord administrateur.
+
+Cordialement,
+La plateforme IAI Togo
+"""
+        
+        try:
+            send_mail(
+                sujet,
+                message,
+                settings.DEFAULT_FROM_EMAIL or 'noreply@iai-education.com',
+                admin_emails,
+                fail_silently=False,
+            )
+        except Exception as e:
+            print(f"Erreur envoi email aux admins: {e}")
+
     class Meta:
         verbose_name = "Ressource"
         verbose_name_plural = "Ressources"
@@ -317,7 +368,7 @@ class DocumentStage(models.Model):
     
     titre = models.CharField(max_length=255)
     type_document = models.CharField(max_length=20, choices=TYPE_DOCUMENT, default='rapport')
-    url_document = models.URLField(max_length=500)
+    url_document = models.FileField(upload_to='documents_stage/', verbose_name="Fichier")
     est_modele_officiel = models.BooleanField(default=False)
     
     etudiant = models.ForeignKey(

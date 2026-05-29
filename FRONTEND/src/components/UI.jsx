@@ -225,6 +225,58 @@ export function EmptyState({ icon, title, subtitle, action }) {
   )
 }
 
+// ── Pagination ──────────────────────────────────────────────────────────────────
+export function Pagination({ page, totalPages, onPageChange, hasPrevious, hasNext }) {
+  if (totalPages <= 1) return null
+
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: '8px',
+      marginTop: '24px',
+      flexWrap: 'wrap'
+    }}>
+      <button
+        onClick={() => onPageChange(page - 1)}
+        disabled={!hasPrevious}
+        style={{
+          padding: '8px 12px',
+          border: '1px solid var(--gray-200)',
+          background: '#fff',
+          borderRadius: 'var(--radius-sm)',
+          cursor: hasPrevious ? 'pointer' : 'not-allowed',
+          opacity: hasPrevious ? 1 : 0.5,
+          fontSize: '13px'
+        }}
+      >
+        ← Précédent
+      </button>
+
+      <span style={{ fontSize: '13px', color: 'var(--gray-500)' }}>
+        Page {page} sur {totalPages}
+      </span>
+
+      <button
+        onClick={() => onPageChange(page + 1)}
+        disabled={!hasNext}
+        style={{
+          padding: '8px 12px',
+          border: '1px solid var(--gray-200)',
+          background: '#fff',
+          borderRadius: 'var(--radius-sm)',
+          cursor: hasNext ? 'pointer' : 'not-allowed',
+          opacity: hasNext ? 1 : 0.5,
+          fontSize: '13px'
+        }}
+      >
+        Suivant →
+      </button>
+    </div>
+  )
+}
+
 // ── StatCard ──────────────────────────────────────────────────────────────────
 export function StatCard({ icon, label, value, color = 'var(--navy)', sub }) {
   return (
@@ -243,6 +295,157 @@ export function StatCard({ icon, label, value, color = 'var(--navy)', sub }) {
       </div>
       <p style={{ fontSize: '28px', fontWeight: 800, color, lineHeight: 1 }}>{value}</p>
       {sub && <p style={{ fontSize: '12px', color: 'var(--gray-400)', marginTop: '6px' }}>{sub}</p>}
+    </div>
+  )
+}
+
+// ── DocumentViewer ──────────────────────────────────────────────────────────────
+export function DocumentViewer({ url, filename, fileExtension, mimeType, canPreview, onClose }) {
+  const renderPreview = () => {
+    if (!canPreview || !mimeType) {
+      return (
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', padding: '48px', textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>📦</div>
+          <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--navy)', marginBottom: '8px' }}>
+            Aperçu non disponible
+          </h4>
+          <p style={{ fontSize: '14px', color: 'var(--gray-500)', marginBottom: '20px' }}>
+            Ce type de fichier ({fileExtension}) ne peut pas être affiché dans le navigateur.
+          </p>
+          <a
+            href={url}
+            download
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              background: 'var(--navy)', color: '#fff', padding: '10px 20px',
+              borderRadius: 'var(--radius)', textDecoration: 'none', fontWeight: 600,
+              fontSize: '14px',
+            }}
+          >
+            📥 Télécharger le fichier
+          </a>
+        </div>
+      )
+    }
+
+    // PDF Viewer
+    if (mimeType === 'application/pdf') {
+      return (
+        <div style={{ width: '100%', height: '70vh' }}>
+          <iframe
+            src={url}
+            style={{ width: '100%', height: '100%', border: 'none', borderRadius: 'var(--radius)' }}
+            title={filename}
+          />
+        </div>
+      )
+    }
+
+    // Image Viewer
+    if (mimeType.startsWith('image/')) {
+      return (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px', background: '#f8fafc', borderRadius: 'var(--radius)',
+        }}>
+          <img
+            src={url}
+            alt={filename}
+            style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: 'var(--radius)' }}
+          />
+        </div>
+      )
+    }
+
+    // Text/CSV/HTML Viewer
+    if (['text/plain', 'text/csv', 'text/html'].includes(mimeType)) {
+      return (
+        <div style={{
+          background: '#f8fafc', padding: '20px', borderRadius: 'var(--radius)',
+          maxHeight: '70vh', overflow: 'auto', fontFamily: 'monospace',
+          fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap',
+        }}>
+          <p style={{ color: 'var(--gray-500)', marginBottom: '12px', fontSize: '12px' }}>
+            Aperçu du fichier : {filename}
+          </p>
+          <iframe
+            src={url}
+            style={{ width: '100%', height: '60vh', border: '1px solid var(--gray-200)', borderRadius: 'var(--radius)' }}
+            title={filename}
+          />
+        </div>
+      )
+    }
+
+    return null
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(15,37,87,.7)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1001, padding: '24px', animation: 'fadeIn .2s ease',
+        backdropFilter: 'blur(4px)',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: '#fff', borderRadius: 'var(--radius-xl)',
+          width: '100%', maxWidth: 900, maxHeight: '85vh', overflow: 'hidden',
+          animation: 'fadeUp .25s ease', boxShadow: 'var(--shadow-2xl)',
+          display: 'flex', flexDirection: 'column',
+        }}
+      >
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '16px 24px', borderBottom: '1px solid var(--gray-100)',
+          background: '#f8fafc',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 'var(--radius)',
+              background: 'var(--navy)', color: '#fff', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', fontSize: '16px',
+            }}>
+              {mimeType?.startsWith('image/') ? '🖼️' : mimeType === 'application/pdf' ? '📄' : '📎'}
+            </div>
+            <div>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>{filename}</h3>
+              <p style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
+                {fileExtension?.toUpperCase() || 'Fichier'} • {(mimeType || '').split('/')[1]?.toUpperCase() || 'Type inconnu'}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <a
+              href={url}
+              download
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: 'var(--navy)', color: '#fff', padding: '8px 16px',
+                borderRadius: 'var(--radius)', textDecoration: 'none', fontWeight: 600,
+                fontSize: '13px',
+              }}
+            >
+              📥 Télécharger
+            </a>
+            <button onClick={onClose} style={{
+              width: 36, height: 36, borderRadius: '50%', background: 'var(--gray-100)',
+              border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', fontSize: '18px', color: 'var(--gray-500)',
+            }}>×</button>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+          {renderPreview()}
+        </div>
+      </div>
     </div>
   )
 }

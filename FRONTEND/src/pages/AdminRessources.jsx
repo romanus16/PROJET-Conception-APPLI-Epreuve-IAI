@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { ressourcesAPI } from '../utils/api'
-import { Card, Badge, Spinner, EmptyState } from '../components/UI'
+import { Card, Badge, Spinner, EmptyState, Pagination } from '../components/UI'
 
 const TYPE_ICONS   = { cours:'📚', td:'✏️', tp:'💻', examen:'📝', autre:'📎' }
 const TYPE_LABELS  = { cours:'Cours', td:'TD', tp:'TP', examen:'Examen', autre:'Autre' }
@@ -13,10 +13,30 @@ export default function AdminRessources() {
   const [search,     setSearch]     = useState('')
   const [filtStatut, setFiltStatut] = useState('')
   const [filtType,   setFiltType]   = useState('')
+  const [filtFiliere, setFiltFiliere] = useState('')
+  const [page,       setPage]       = useState(1)
+  const [pagination, setPagination] = useState(null)
 
   useEffect(() => {
-    ressourcesAPI.list().then(r => setRessources(r.data.data)).finally(() => setLoading(false))
-  }, [])
+    const params = {
+      page: page,
+      page_size: 20,
+      search: search || undefined,
+      statut: filtStatut || undefined,
+      type: filtType || undefined,
+      filiere: filtFiliere || undefined
+    }
+
+    // Remove undefined values
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== '')
+    )
+
+    ressourcesAPI.list(cleanParams).then(r => {
+      setRessources(r.data.data)
+      setPagination(r.data.pagination)
+    }).finally(() => setLoading(false))
+  }, [page, search, filtStatut, filtType, filtFiliere])
 
   const filtered = ressources.filter(r => {
     const ms = !search ||
@@ -25,7 +45,8 @@ export default function AdminRessources() {
       r.matiere?.nom_matiere.toLowerCase().includes(search.toLowerCase())
     const mst = !filtStatut || r.statut         === filtStatut
     const mt  = !filtType   || r.type_ressources=== filtType
-    return ms && mst && mt
+    const mf  = !filtFiliere || r.filiere === filtFiliere
+    return ms && mst && mt && mf
   })
 
   return (
@@ -53,6 +74,13 @@ export default function AdminRessources() {
             <option key={v} value={v}>{TYPE_ICONS[v]} {l}</option>
           ))}
         </select>
+        <select value={filtFiliere} onChange={e => setFiltFiliere(e.target.value)}
+          style={{ padding:'10px 12px', border:'1.5px solid var(--gray-200)', borderRadius:'var(--radius-sm)', fontSize:'13px', background:'#fff', fontFamily:'var(--font-sans)', cursor:'pointer' }}>
+          <option value="">Toutes les filières</option>
+          <option value="L1">L1 - Licence 1</option>
+          <option value="L2">L2 - Licence 2</option>
+          <option value="L3">L3 - Licence 3</option>
+        </select>
       </div>
 
       {loading
@@ -71,12 +99,22 @@ export default function AdminRessources() {
                     <div style={{ display:'flex', gap:'6px', alignItems:'center', flexWrap:'wrap' }}>
                       <Badge color={STATUT_COLOR[r.statut]}>{STATUT_LABEL[r.statut]}</Badge>
                       <Badge color="gray">{TYPE_LABELS[r.type_ressources]}</Badge>
+                      <Badge color="blue">{r.filiere_display || r.filiere}</Badge>
                       <span style={{ fontSize:'12px', color:'var(--gray-400)' }}>📥 {r.nombre_telechargements}</span>
                       <span style={{ fontSize:'12px', color:'var(--gray-400)' }}>{new Date(r.date_soumission).toLocaleDateString('fr-FR')}</span>
                     </div>
                   </div>
                 </Card>
               ))}
+              {pagination && (
+                <Pagination
+                  page={pagination.page}
+                  totalPages={pagination.total_pages}
+                  onPageChange={setPage}
+                  hasPrevious={pagination.has_previous}
+                  hasNext={pagination.has_next}
+                />
+              )}
             </div>
       }
     </div>
